@@ -31,3 +31,6 @@ ${REPO_LOC}/vendor/bin/codecept run api --quiet --no-colors > "${SCRIPT_OUTPUT}"
 # parse output from script
 
 # set final status
+
+# revert to master branch
+git checkout master
