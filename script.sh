@@ -18,7 +18,7 @@ fi
 
 # checkout specified commit
 cd "${GIT_REPO}"
-git fetch "${COMMIT}"
+git fetch origin "${COMMIT}"
 git checkout "${COMMIT}"
 
 # pre-run tasks
