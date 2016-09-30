@@ -2,13 +2,14 @@
 # script.sh: script to cd to a git repo, fetch specified commit, switch to it, run tests and post the output
 
 # config vars
-REPO_NAME=ActozenQC3
-REPO_LOC=/var/repo/${REPO_NAME}
+REPO_NAME=h3.example.com
+REPO_LOC=/www/${REPO_NAME}
 REPO_GIT=${REPO_LOC}/.git
 CODECEPT_CONF=${REPO_LOC}/codeception.yml
 SCRIPT_OUTPUT_DIR=/var/log/cinner
 SCRIPT_OUTPUT=${SCRIPT_OUTPUT_DIR}/CInner_run_${REPO_NAME}_$(date +%s).log
 QUIET=" --quiet "
+CODECEPT_ARG=""
 
 # functions
 show_help() {
@@ -30,6 +31,7 @@ while getopts ":c:vh" opt; do
       ;;
     v)
         QUIET=""
+	CODECEPT_ARG="--debug"
       ;;
     h)
         show_help
@@ -54,16 +56,14 @@ fi
 
 # checkout specified commit
 git --git-dir=${REPO_GIT} --work-tree=${REPO_LOC} fetch origin ${QUIET} #|| exit 1
-git --git-dir=${REPO_GIT} --work-tree=${REPO_LOC} checkout "${COMMIT}" ${QUIET} #|| exit 1
+git --git-dir=${REPO_GIT} --work-tree=${REPO_LOC} checkout -f "${COMMIT}" ${QUIET} #|| exit 1
 
 # pre-run tasks
-r1='s|h3.example.com|health-zen.com|g'
-sed -e "$r1" -i "${REPO_LOC}/tests/api.suite.yml"
 
 # set status as pending
 
 # run specified script
-${REPO_LOC}/vendor/bin/codecept run api --no-colors --ansi --config ${CODECEPT_CONF} > "${SCRIPT_OUTPUT}" 2>&1
+${REPO_LOC}/vendor/bin/codecept run api --no-colors --ansi --config ${CODECEPT_CONF} ${CODECEPT_ARG} > "${SCRIPT_OUTPUT}" 2>&1
 
 # parse output from script
 CMD_OUTPUT=$(tail -n -2 "${SCRIPT_OUTPUT}")
@@ -76,5 +76,3 @@ fi
 
 # set final status
 
-# revert to master branch
-git --git-dir=${REPO_GIT} --work-tree=${REPO_LOC} checkout master ${QUIET}
