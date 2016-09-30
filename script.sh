@@ -6,7 +6,8 @@ REPO_NAME=ActozenQC3
 REPO_LOC=/var/repo/${REPO_NAME}
 REPO_GIT=${REPO_LOC}/.git
 CODECEPT_CONF=${REPO_LOC}/codeception.yml
-SCRIPT_OUTPUT=/tmp/CInner_run_${REPO_NAME}_$(date +%s).txt
+SCRIPT_OUTPUT_DIR=/var/log/cinner
+SCRIPT_OUTPUT=${SCRIPT_OUTPUT_DIR}/CInner_run_${REPO_NAME}_$(date +%s).log
 COMMIT=$1
 
 # check cmd line
@@ -28,9 +29,16 @@ git --git-dir=${REPO_GIT} --work-tree=${REPO_LOC} checkout "${COMMIT}" --quiet
 # set status as pending
 
 # run specified script
-${REPO_LOC}/vendor/bin/codecept run api --no-colors --config ${CODECEPT_CONF} > "${SCRIPT_OUTPUT}" 2>&1
+${REPO_LOC}/vendor/bin/codecept run api --no-colors --ansi --config ${CODECEPT_CONF} > "${SCRIPT_OUTPUT}" 2>&1
 
 # parse output from script
+$CMD_OUTPUT=$(tail -n -2 ${SCRIPT_OUTPUT})
+echo "${CMD_OUTPUT}" | grep -q 'FAILURES!'
+if [ $? -eq 1 ]; then
+	STATUS=failure
+else
+	STATUS=success
+fi
 
 # set final status
 
