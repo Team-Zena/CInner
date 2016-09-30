@@ -53,10 +53,12 @@ if [ -z ${COMMIT} ]; then
 fi
 
 # checkout specified commit
-git --git-dir=${REPO_GIT} --work-tree=${REPO_LOC} fetch origin "${COMMIT}" ${QUIET} #|| exit 1
+git --git-dir=${REPO_GIT} --work-tree=${REPO_LOC} fetch origin ${QUIET} #|| exit 1
 git --git-dir=${REPO_GIT} --work-tree=${REPO_LOC} checkout "${COMMIT}" ${QUIET} #|| exit 1
 
 # pre-run tasks
+r1='s|h3.example.com|health-zen.com|g'
+sed -e "$r1" -i "${REPO_LOC}/tests/api.suite.yml"
 
 # set status as pending
 
@@ -64,7 +66,7 @@ git --git-dir=${REPO_GIT} --work-tree=${REPO_LOC} checkout "${COMMIT}" ${QUIET} 
 ${REPO_LOC}/vendor/bin/codecept run api --no-colors --ansi --config ${CODECEPT_CONF} > "${SCRIPT_OUTPUT}" 2>&1
 
 # parse output from script
-$CMD_OUTPUT=$(tail -n -2 ${SCRIPT_OUTPUT})
+CMD_OUTPUT=$(tail -n -2 "${SCRIPT_OUTPUT}")
 echo "${CMD_OUTPUT}" | grep -q 'FAILURES!'
 if [ $? -eq 1 ]; then
 	STATUS=failure
