@@ -8,8 +8,11 @@ REPO_NAME=h3.example.com
 REPO_LOC=/www/${REPO_NAME}
 REPO_GIT=${REPO_LOC}/.git
 CODECEPT_CONF=${REPO_LOC}/codeception.yml
-SCRIPT_OUTPUT_DIR=/var/log/cinner
-SCRIPT_OUTPUT=${SCRIPT_OUTPUT_DIR}/CInner_run_${REPO_NAME}_$(date +%s).log
+#SCRIPT_OUTPUT_DIR=/var/log/cinner
+SCRIPT_OUTPUT_DIR=${REPO_LOC}/log
+SCRIPT_OUTPUT_NAME=CInner_run_${REPO_NAME}_$(date +%s).log
+SCRIPT_OUTPUT=${SCRIPT_OUTPUT_DIR}/${SCRIPT_OUTPUT_NAME}
+LOG_URL="http://ci.health-zen.com/log/${SCRIPT_OUTPUT_NAME}"
 QUIET=" --quiet "
 CODECEPT_ARG=""
 
@@ -63,6 +66,7 @@ git --git-dir=${REPO_GIT} --work-tree=${REPO_LOC} checkout -f "${COMMIT}" ${QUIE
 # pre-run tasks
 
 # set status as pending
+curl -i -H 'Authorization: token dc7229feb1a12c07927691db03e02587f8712967' -d '{  "state": "pending",  "target_url": "${LOG_URL}",  "description": "About to run the tasks","context": "ci/script/pending"}' https://api.github.com/repos/vaibhav-kaushal/ActozenQC3/statuses/${COMMIT}
 
 # run specified script
 ${REPO_LOC}/vendor/bin/codecept run api --no-colors --ansi --config ${CODECEPT_CONF} ${CODECEPT_ARG} > "${SCRIPT_OUTPUT}" 2>&1
@@ -77,4 +81,5 @@ else
 fi
 
 # set final status
+curl -i -H 'Authorization: token dc7229feb1a12c07927691db03e02587f8712967' -d '{  "state": "${STATUS}",  "target_url": "${LOG_URL}",  "description": "${CMD_OUTPUT}","context": "ci/script/executed"}' https://api.github.com/repos/vaibhav-kaushal/ActozenQC3/statuses/${COMMIT}
 
