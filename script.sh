@@ -1,6 +1,8 @@
 #!/bin/bash
 # script.sh: script to cd to a git repo, fetch specified commit, switch to it, run tests and post the output
 
+# Curl request sample: curl -i -H 'Authorization: token dc7229feb1a12c07927691db03e02587f8712967' -d '{  "state": "failure",  "target_url": "https://ngrok.example.com/build/fail1234",  "description": "Beta tumse na ho payega","context": "ci/custom/ngrok"}' https://api.github.com/repos/vaibhav-kaushal/Spoon-Knife/statuses/1b500a33c7b87561189d3f321e7293018c15ff9f
+
 # config vars
 REPO_NAME=h3.example.com
 REPO_LOC=/www/${REPO_NAME}
