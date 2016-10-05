@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dataSource name="Sqlite (Xerial) - buildStatus.db">
+  <database-model serializer="dbm" rdbms="SQLITE" format-version="2.6">
+    <schema id="1">
+      <visible>1</visible>
+    </schema>
+    <table id="2" parent="1" name="events"/>
+    <table id="3" parent="1" name="test_status"/>
+    <column id="4" parent="2" name="id">
+      <data-type>TEXT(0,-1)|12</data-type>
+    </column>
+    <column id="5" parent="2" name="data">
+      <data-type>TEXT(0,-1)|12</data-type>
+    </column>
+    <column id="6" parent="3" name="commit_id">
+      <mandatory>1</mandatory>
+      <data-type>TEXT(0,-1)|12</data-type>
+    </column>
+    <column id="7" parent="3" name="status">
+      <mandatory>1</mandatory>
+      <data-type>INT(0,-1)|4</data-type>
+      <default-expression>0</default-expression>
+    </column>
+    <column id="8" parent="3" name="test_request_time">
+      <mandatory>1</mandatory>
+      <data-type>INT(0,-1)|4</data-type>
+    </column>
+    <index id="9" parent="3" name="test_status_index">
+      <columns>status</columns>
+      <desc-columns></desc-columns>
+      <unique>1</unique>
+    </index>
+    <key id="10" parent="3">
+      <columns>commit_id</columns>
+      <primary>1</primary>
+    </key>
+  </database-model>
+</dataSource>
