@@ -27,9 +27,9 @@
 		exit(4);
 	}
 
-
-
 	$strCommand = __DIR__ . '/script.sh -c ' . $strCommitHash;
+
+	echo "about to run " . $strCommand;
 	$strOutput = shell_exec($strCommand);
 
 	echo "test was run.";
