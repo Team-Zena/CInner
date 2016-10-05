@@ -1,8 +1,6 @@
 #!/bin/bash
 # script.sh: script to cd to a git repo, fetch specified commit, switch to it, run tests and post the output
 
-# Curl request sample: curl -i -H 'Authorization: token dc7229feb1a12c07927691db03e02587f8712967' -d '{  "state": "failure",  "target_url": "https://ngrok.example.com/build/fail1234",  "description": "Beta tumse na ho payega","context": "ci/custom/ngrok"}' https://api.github.com/repos/vaibhav-kaushal/Spoon-Knife/statuses/1b500a33c7b87561189d3f321e7293018c15ff9f
-
 # config vars
 REPO_NAME=h3.example.com
 REPO_LOC=/www/${REPO_NAME}
@@ -14,8 +12,8 @@ SCRIPT_OUTPUT_DIR=${CINNER_LOC}/log
 SCRIPT_OUTPUT_NAME=CInner_run_${REPO_NAME}_$(date +%s).txt
 SCRIPT_OUTPUT=${SCRIPT_OUTPUT_DIR}/${SCRIPT_OUTPUT_NAME}
 LOG_URL="https://ci.health-zen.com/log/${SCRIPT_OUTPUT_NAME}"
-GITHUB_TOKEN="597658d8324c68ec197b35223de99cf6d89d03e7"
-GITHUB_API_REMOTE="https://api.github.com/repos/vaibhav-kaushal/ActozenQC3"
+GITHUB_TOKEN="12345678"
+GITHUB_API_REMOTE="https://api.github.com/repos/username/repo"
 QUIET=" --quiet "
 CODECEPT_ARG=""
 VERBOSE=0
@@ -70,6 +68,7 @@ git --git-dir=${REPO_GIT} --work-tree=${REPO_LOC} fetch origin ${QUIET} #|| exit
 git --git-dir=${REPO_GIT} --work-tree=${REPO_LOC} checkout -f "${COMMIT}" ${QUIET} #|| exit 1
 
 # pre-run tasks
+/usr/local/scripts/export_vars.sh
 
 # set status as pending
 curl --silent -i -H 'Authorization: token "${GITHUB_TOKEN}"' -d '{  "state": "pending",  "target_url": "${LOG_URL}",  "description": "About to run the tasks","context": "ci/script/pending"}' "${GITHUB_API_REMOTE}/statuses/${COMMIT}" > "${SCRIPT_OUTPUT}" 2>&1
