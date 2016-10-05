@@ -30,3 +30,4 @@
 	$strCommand = './script.sh -c ' . $strCommitHash;
 	$strOutput = shell_exec($strCommand);
 
+	echo "test was run.";
