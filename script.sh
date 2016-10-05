@@ -74,18 +74,20 @@ curl --silent -i -H 'Authorization: token dc7229feb1a12c07927691db03e02587f87129
 
 # run specified script
 [ $VERBOSE -eq 1 ] && echo "running test script..."
+echo ""  >> "${SCRIPT_OUTPUT}"
 ${REPO_LOC}/vendor/bin/codecept run api --no-colors --ansi --config ${CODECEPT_CONF} ${CODECEPT_ARG} >> "${SCRIPT_OUTPUT}" 2>&1
 
 # parse output from script
 CMD_OUTPUT=$(tail -n -2 "${SCRIPT_OUTPUT}")
 echo "${CMD_OUTPUT}" | grep -q 'FAILURES!'
-if [ $? -eq 1 ]; then
+if [ $? -eq 0 ]; then
 	STATUS=failure
 else
 	STATUS=success
 fi
 
 # set final status
+echo ""  >> "${SCRIPT_OUTPUT}"
 curl --silent -i -H 'Authorization: token dc7229feb1a12c07927691db03e02587f8712967' -d '{  "state": "${STATUS}",  "target_url": "${LOG_URL}",  "description": "${CMD_OUTPUT}","context": "ci/script/executed"}' https://api.github.com/repos/vaibhav-kaushal/ActozenQC3/statuses/${COMMIT} >> "${SCRIPT_OUTPUT}" 2>&1
 
 [ $VERBOSE -eq 1 ] && echo "test complete, status: $STATUS"
