@@ -91,4 +91,5 @@ fi
 curl --silent -i -H "Authorization: token ${GITHUB_TOKEN}" -d '{  "state": "'${STATUS}'",  "target_url": "'${LOG_URL}'",  "description": "'"${CMD_OUTPUT}"'","context": "ci/script"}' "${GITHUB_API_REMOTE}/statuses/${COMMIT}" >> "${REQUEST_OUTPUT}" 2>&1
 
 [ $VERBOSE -eq 1 ] && echo "test complete, status: $STATUS"
-exit 0
+exit 0;
+

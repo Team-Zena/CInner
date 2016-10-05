@@ -22,18 +22,24 @@ class DbHandler {
     public function CreateDb() {
         $this->objDb = new SQLite3("buildStatus.db");
 
-        $this->objDb->query("CREATE TABLE IF NOT EXISTS events (id TEXT, data TEXT);");
+        $this->objDb->query("CREATE TABLE IF NOT EXISTS test_status
+(
+    commit_id TEXT PRIMARY KEY NOT NULL,
+    status INTEGER DEFAULT 0 NOT NULL,
+    test_request_time INTEGER NOT NULL
+);
+CREATE UNIQUE INDEX test_status_index ON test_status (status);");
 
         $strId = md5('');
-        $strValue = "Test Successful";
-        $this->objDb->query("INSERT INTO events (id, data) VALUES ('$strId', '$strValue')");
+        $strValue = "DB Created";
+//        $this->objDb->query("INSERT INTO events (id, data) VALUES ('$strId', '$strValue')");
     }
 
     /**
      * @param $strData
      * @return bool
      */
-    public function RecordEvent($strData) {
+    public function CreateNewTestStatus($strData) {
         // Ensure that the Data is an array
         if(!is_array($strData)) {
             return false;
