@@ -71,12 +71,11 @@ git --git-dir=${REPO_GIT} --work-tree=${REPO_LOC} checkout -f "${COMMIT}" ${QUIE
 source /usr/local/scripts/set_vars.sh
 
 # set status as pending
-curl --silent -i -H 'Authorization: token "${GITHUB_TOKEN}"' -d '{  "state": "pending",  "target_url": "${LOG_URL}",  "description": "About to run the tasks","context": "ci/script/pending"}' "${GITHUB_API_REMOTE}/statuses/${COMMIT}" > "${SCRIPT_OUTPUT}" 2>&1
+curl --silent -i -H "Authorization: token ${GITHUB_TOKEN}" -d '{  "state": "pending",  "target_url": "'${LOG_URL}'",  "description": "About to run the tasks","context": "ci/script/pending"}' "${GITHUB_API_REMOTE}/statuses/${COMMIT}"
 
 # run specified script
 [ $VERBOSE -eq 1 ] && echo "running test script..."
-echo ""  >> "${SCRIPT_OUTPUT}"
-${REPO_LOC}/vendor/bin/codecept run api --no-colors --ansi --config ${CODECEPT_CONF} ${CODECEPT_ARG} >> "${SCRIPT_OUTPUT}" 2>&1
+${REPO_LOC}/vendor/bin/codecept run api --no-colors --ansi --config ${CODECEPT_CONF} ${CODECEPT_ARG} > "${SCRIPT_OUTPUT}" 2>&1
 
 # parse output from script
 CMD_OUTPUT=$(tail -n -2 "${SCRIPT_OUTPUT}")
@@ -88,8 +87,7 @@ else
 fi
 
 # set final status
-echo ""  >> "${SCRIPT_OUTPUT}"
-curl --silent -i -H 'Authorization: token "${GITHUB_TOKEN}"' -d '{  "state": "${STATUS}",  "target_url": "${LOG_URL}",  "description": "${CMD_OUTPUT}","context": "ci/script/executed"}' "${GITHUB_API_REMOTE}/statuses/${COMMIT}" >> "${SCRIPT_OUTPUT}" 2>&1
+curl --silent -i -H "Authorization: token ${GITHUB_TOKEN}" -d '{  "state": "'${STATUS}'",  "target_url": "'${LOG_URL}'",  "description": "'${CMD_OUTPUT}'","context": "ci/script/executed"}' "${GITHUB_API_REMOTE}/statuses/${COMMIT}"
 
 [ $VERBOSE -eq 1 ] && echo "test complete, status: $STATUS"
 exit 0
