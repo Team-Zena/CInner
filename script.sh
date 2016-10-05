@@ -9,12 +9,14 @@ REPO_LOC=/www/${REPO_NAME}
 REPO_GIT=${REPO_LOC}/.git
 CODECEPT_CONF=${REPO_LOC}/codeception.yml
 #SCRIPT_OUTPUT_DIR=/var/log/cinner
-SCRIPT_OUTPUT_DIR=${REPO_LOC}/log
+CINNER_DIR=$(pwd)
+SCRIPT_OUTPUT_DIR=${CINNER_LOC}/log
 SCRIPT_OUTPUT_NAME=CInner_run_${REPO_NAME}_$(date +%s).log
 SCRIPT_OUTPUT=${SCRIPT_OUTPUT_DIR}/${SCRIPT_OUTPUT_NAME}
 LOG_URL="http://ci.health-zen.com/log/${SCRIPT_OUTPUT_NAME}"
 QUIET=" --quiet "
 CODECEPT_ARG=""
+VERBOSE=1
 
 # functions
 show_help() {
@@ -37,6 +39,7 @@ while getopts ":c:vh" opt; do
     v)
         QUIET=""
 	CODECEPT_ARG="--debug"
+	VERBOSE=0
       ;;
     h)
         show_help
@@ -60,6 +63,7 @@ if [ -z ${COMMIT} ]; then
 fi
 
 # checkout specified commit
+[ $VERBOSE ] && echo "fetching and checking out via git..."
 git --git-dir=${REPO_GIT} --work-tree=${REPO_LOC} fetch origin ${QUIET} #|| exit 1
 git --git-dir=${REPO_GIT} --work-tree=${REPO_LOC} checkout -f "${COMMIT}" ${QUIET} #|| exit 1
 
@@ -69,6 +73,7 @@ git --git-dir=${REPO_GIT} --work-tree=${REPO_LOC} checkout -f "${COMMIT}" ${QUIE
 curl -i -H 'Authorization: token dc7229feb1a12c07927691db03e02587f8712967' -d '{  "state": "pending",  "target_url": "${LOG_URL}",  "description": "About to run the tasks","context": "ci/script/pending"}' https://api.github.com/repos/vaibhav-kaushal/ActozenQC3/statuses/${COMMIT}
 
 # run specified script
+[ $VERBOSE ] && echo "running test script..."
 ${REPO_LOC}/vendor/bin/codecept run api --no-colors --ansi --config ${CODECEPT_CONF} ${CODECEPT_ARG} > "${SCRIPT_OUTPUT}" 2>&1
 
 # parse output from script
@@ -83,3 +88,5 @@ fi
 # set final status
 curl -i -H 'Authorization: token dc7229feb1a12c07927691db03e02587f8712967' -d '{  "state": "${STATUS}",  "target_url": "${LOG_URL}",  "description": "${CMD_OUTPUT}","context": "ci/script/executed"}' https://api.github.com/repos/vaibhav-kaushal/ActozenQC3/statuses/${COMMIT}
 
+[ $VERBOSE ] && echo "test complete, status: $STATUS"
+exit 0
