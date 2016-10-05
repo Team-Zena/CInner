@@ -70,7 +70,7 @@ git --git-dir=${REPO_GIT} --work-tree=${REPO_LOC} checkout -f "${COMMIT}" ${QUIE
 # pre-run tasks
 
 # set status as pending
-curl -i -H 'Authorization: token dc7229feb1a12c07927691db03e02587f8712967' -d '{  "state": "pending",  "target_url": "${LOG_URL}",  "description": "About to run the tasks","context": "ci/script/pending"}' https://api.github.com/repos/vaibhav-kaushal/ActozenQC3/statuses/${COMMIT}
+curl --silent -i -H 'Authorization: token dc7229feb1a12c07927691db03e02587f8712967' -d '{  "state": "pending",  "target_url": "${LOG_URL}",  "description": "About to run the tasks","context": "ci/script/pending"}' https://api.github.com/repos/vaibhav-kaushal/ActozenQC3/statuses/${COMMIT} > "${SCRIPT_OUTPUT}" 2>&1
 
 # run specified script
 [ $VERBOSE -eq 1 ] && echo "running test script..."
@@ -86,7 +86,7 @@ else
 fi
 
 # set final status
-curl -i -H 'Authorization: token dc7229feb1a12c07927691db03e02587f8712967' -d '{  "state": "${STATUS}",  "target_url": "${LOG_URL}",  "description": "${CMD_OUTPUT}","context": "ci/script/executed"}' https://api.github.com/repos/vaibhav-kaushal/ActozenQC3/statuses/${COMMIT}
+curl --silent -i -H 'Authorization: token dc7229feb1a12c07927691db03e02587f8712967' -d '{  "state": "${STATUS}",  "target_url": "${LOG_URL}",  "description": "${CMD_OUTPUT}","context": "ci/script/executed"}' https://api.github.com/repos/vaibhav-kaushal/ActozenQC3/statuses/${COMMIT} > "${SCRIPT_OUTPUT}" 2>&1
 
 [ $VERBOSE -eq 1 ] && echo "test complete, status: $STATUS"
 exit 0
