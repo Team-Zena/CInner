@@ -68,7 +68,7 @@ git --git-dir=${REPO_GIT} --work-tree=${REPO_LOC} fetch origin ${QUIET} #|| exit
 git --git-dir=${REPO_GIT} --work-tree=${REPO_LOC} checkout -f "${COMMIT}" ${QUIET} #|| exit 1
 
 # pre-run tasks
-/usr/local/scripts/export_vars.sh
+source /usr/local/scripts/set_vars.sh
 
 # set status as pending
 curl --silent -i -H 'Authorization: token "${GITHUB_TOKEN}"' -d '{  "state": "pending",  "target_url": "${LOG_URL}",  "description": "About to run the tasks","context": "ci/script/pending"}' "${GITHUB_API_REMOTE}/statuses/${COMMIT}" > "${SCRIPT_OUTPUT}" 2>&1
