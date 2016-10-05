@@ -11,9 +11,11 @@ CODECEPT_CONF=${REPO_LOC}/codeception.yml
 #SCRIPT_OUTPUT_DIR=/var/log/cinner
 CINNER_LOC=$(pwd)
 SCRIPT_OUTPUT_DIR=${CINNER_LOC}/log
-SCRIPT_OUTPUT_NAME=CInner_run_${REPO_NAME}_$(date +%s).log
+SCRIPT_OUTPUT_NAME=CInner_run_${REPO_NAME}_$(date +%s).txt
 SCRIPT_OUTPUT=${SCRIPT_OUTPUT_DIR}/${SCRIPT_OUTPUT_NAME}
-LOG_URL="http://ci.health-zen.com/log/${SCRIPT_OUTPUT_NAME}"
+LOG_URL="https://ci.health-zen.com/log/${SCRIPT_OUTPUT_NAME}"
+GITHUB_TOKEN="597658d8324c68ec197b35223de99cf6d89d03e7"
+GITHUB_API_REMOTE="https://api.github.com/repos/vaibhav-kaushal/ActozenQC3"
 QUIET=" --quiet "
 CODECEPT_ARG=""
 VERBOSE=0
@@ -70,7 +72,7 @@ git --git-dir=${REPO_GIT} --work-tree=${REPO_LOC} checkout -f "${COMMIT}" ${QUIE
 # pre-run tasks
 
 # set status as pending
-curl --silent -i -H 'Authorization: token dc7229feb1a12c07927691db03e02587f8712967' -d '{  "state": "pending",  "target_url": "${LOG_URL}",  "description": "About to run the tasks","context": "ci/script/pending"}' https://api.github.com/repos/vaibhav-kaushal/ActozenQC3/statuses/${COMMIT} > "${SCRIPT_OUTPUT}" 2>&1
+curl --silent -i -H 'Authorization: token "${GITHUB_TOKEN}"' -d '{  "state": "pending",  "target_url": "${LOG_URL}",  "description": "About to run the tasks","context": "ci/script/pending"}' "${GITHUB_API_REMOTE}/statuses/${COMMIT}" > "${SCRIPT_OUTPUT}" 2>&1
 
 # run specified script
 [ $VERBOSE -eq 1 ] && echo "running test script..."
@@ -88,7 +90,7 @@ fi
 
 # set final status
 echo ""  >> "${SCRIPT_OUTPUT}"
-curl --silent -i -H 'Authorization: token dc7229feb1a12c07927691db03e02587f8712967' -d '{  "state": "${STATUS}",  "target_url": "${LOG_URL}",  "description": "${CMD_OUTPUT}","context": "ci/script/executed"}' https://api.github.com/repos/vaibhav-kaushal/ActozenQC3/statuses/${COMMIT} >> "${SCRIPT_OUTPUT}" 2>&1
+curl --silent -i -H 'Authorization: token "${GITHUB_TOKEN}"' -d '{  "state": "${STATUS}",  "target_url": "${LOG_URL}",  "description": "${CMD_OUTPUT}","context": "ci/script/executed"}' "${GITHUB_API_REMOTE}/statuses/${COMMIT}" >> "${SCRIPT_OUTPUT}" 2>&1
 
 [ $VERBOSE -eq 1 ] && echo "test complete, status: $STATUS"
 exit 0
