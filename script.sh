@@ -11,6 +11,7 @@ CINNER_LOC=$(pwd)
 SCRIPT_OUTPUT_DIR=${CINNER_LOC}/log
 SCRIPT_OUTPUT_NAME=CInner_run_${REPO_NAME}_$(date +%s).txt
 SCRIPT_OUTPUT=${SCRIPT_OUTPUT_DIR}/${SCRIPT_OUTPUT_NAME}
+REQUEST_OUTPUT=${SCRIPT_OUTPUT_DIR}/${SCRIPT_OUTPUT_NAME}_REQUEST.txt
 LOG_URL="https://ci.health-zen.com/log/${SCRIPT_OUTPUT_NAME}"
 GITHUB_TOKEN="12345678"
 GITHUB_API_REMOTE="https://api.github.com/repos/username/repo"
@@ -71,7 +72,7 @@ git --git-dir=${REPO_GIT} --work-tree=${REPO_LOC} checkout -f "${COMMIT}" ${QUIE
 source /usr/local/scripts/set_vars.sh
 
 # set status as pending
-curl --silent -i -H "Authorization: token ${GITHUB_TOKEN}" -d '{  "state": "pending",  "target_url": "'${LOG_URL}'",  "description": "About to run the tasks","context": "ci/script/pending"}' "${GITHUB_API_REMOTE}/statuses/${COMMIT}"
+curl --silent -i -H "Authorization: token ${GITHUB_TOKEN}" -d '{  "state": "pending",  "target_url": "'${LOG_URL}'",  "description": "About to run the tasks","context": "ci/script/pending"}' "${GITHUB_API_REMOTE}/statuses/${COMMIT}" > "${REQUEST_OUTPUT}" 2>&1
 
 # run specified script
 [ $VERBOSE -eq 1 ] && echo "running test script..."
@@ -87,7 +88,7 @@ else
 fi
 
 # set final status
-curl --silent -i -H "Authorization: token ${GITHUB_TOKEN}" -d '{  "state": "'${STATUS}'",  "target_url": "'${LOG_URL}'",  "description": "'${CMD_OUTPUT}'","context": "ci/script/executed"}' "${GITHUB_API_REMOTE}/statuses/${COMMIT}"
+curl --silent -i -H "Authorization: token ${GITHUB_TOKEN}" -d '{  "state": "'${STATUS}'",  "target_url": "'${LOG_URL}'",  "description": "'${CMD_OUTPUT}'","context": "ci/script/executed"}' "${GITHUB_API_REMOTE}/statuses/${COMMIT}" >> "${REQUEST_OUTPUT}" 2>&1
 
 [ $VERBOSE -eq 1 ] && echo "test complete, status: $STATUS"
 exit 0
