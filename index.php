@@ -29,6 +29,30 @@
 
 	$strCommand = __DIR__ . '/script.sh -v -c ' . $strCommitHash;
 
+	$curl = curl_init();
+
+//	echo json_encode($strPostInfoArray);
+
+	// Set some options - we are passing in a useragent too here
+	curl_setopt_array($curl, array(
+//		CURLOPT_RETURNTRANSFER => 1,
+		CURLOPT_URL => 'https://api.github.com/repos/vaibhav-kaushal/ActozenQC3/statuses/' . $strCommitHash,
+		CURLOPT_POST => 1,
+		CURLOPT_POSTFIELDS => json_encode([
+			"state" => "pending",
+			"target_url" => "https://ci.health-zen.com/" . $strCommitHash,
+			"description" => "About to run the tasks",
+			"context" => "ci/script/pending"
+		]),
+		CURLOPT_HTTPHEADER => array("Authorization: token f0dc853b8d9e2eab46edeb2e3a3d65e288678b4e")
+	));
+
+	// Send the request & save response to $resp
+	$resp = curl_exec($curl);
+
+	// Close request to clear up some resources
+	curl_close($curl);
+
 	echo "about to run " . $strCommand . "\n";
 
 	$strOutput = shell_exec($strCommand);
