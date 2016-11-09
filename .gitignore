@@ -1,0 +1,7 @@
+log/*
+.idea/*
+*~
+private/*
+buildStatus.db
+config_vars.sh
+config.inc.php
