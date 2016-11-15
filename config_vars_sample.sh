@@ -20,7 +20,7 @@ LOG_URL_BASE="https://ci.example.com/log"
 GITHUB_TOKEN="12345678"
 GITHUB_API_REMOTE="https://api.github.com/repos/username/repo"
 
-# Config related to the test suite we run
+# Config related to the test suite we run (codeception)
 CODECEPT_CONF=${REPO_LOC}/codeception.yml
 
 # Options related to running the script
