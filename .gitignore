@@ -1,7 +1,9 @@
 log/*
 .idea/*
 *~
+*.swp
 private/*
 buildStatus.db
 config_vars.sh
 config.inc.php
+functions_override.sh

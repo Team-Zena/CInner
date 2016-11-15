@@ -42,7 +42,7 @@ send_message () {
 
 	# error checking
 	[ -z "$status" ] && return 1
-	[ -z "$context" ] && context='ci/apiTests'
+	[ -z "$context" ] && context='ci/Tests'
 
 	# send the message
 	/usr/bin/curl --silent -i -H "Authorization: token ${GITHUB_TOKEN}" \
@@ -162,9 +162,9 @@ set_execution_status () {
 	fi
 }
 
-# to run the test script and set output variables
-run_tests () {
-	"${REPO_LOC}/vendor/bin/codecept" run --html="${SCRIPT_OUTPUT_HTML}" api --no-colors --ansi --config "${CODECEPT_CONF}" "${CODECEPT_ARG}" > "${SCRIPT_OUTPUT}" 2>&1
+# to run a codeception test
+codecept_run_test () {
+	"${REPO_LOC}/vendor/bin/codecept" run --html="${SCRIPT_OUTPUT_HTML}" --no-colors --ansi --config "${CODECEPT_CONF}" "${CODECEPT_ARG}" > "${SCRIPT_OUTPUT}" 2>&1
 
 	# parse output from script
 	CMD_OUTPUT=$(tail -n -4 "${SCRIPT_OUTPUT}" | tr -d '\n')
@@ -173,6 +173,26 @@ run_tests () {
 	else
 		STATUS="${STAT_PASS}"
 	fi
+}
+
+# to run the test script and set output variables
+run_tests () {
+	# run the test
+	codecept_run_test
+
+	# one line status
+	CMD_OUTPUT_SHORT=$(get_test_output)
+
+	# if test script failed, rerun test with debug enabled
+	if [ "${STATUS}" = ${STAT_FAIL} ] && check_var "${RERUN_ON_FAILURE}"; then
+		check_verbose && echo "re-running tests with debug mode on..."
+		CODECEPT_ARG="--debug"
+		codecept_run_test
+		send_message "${STATUS}" "${CMD_OUTPUT_SHORT}" "${LOG_URL_SCRIPT}" "ci/Tests/failure-debug"
+	fi
+
+	# send message to github with status
+	send_message "${STATUS}" "${CMD_OUTPUT_SHORT}" "${LOG_URL_CODECEPT}"
 }
 
 # to get the output of a test (one liner)
@@ -184,10 +204,28 @@ get_test_output () {
 	echo -n "${out}"
 }
 
+# to set relevant variables once the COMMIT variable has been redefined
+set_postcommit_vars() {
+	SCRIPT_OUTPUT_NAME=cinner_run_${COMMIT}_${REPO_NAME}.txt
+	SCRIPT_OUTPUT=${SCRIPT_OUTPUT_DIR}/${SCRIPT_OUTPUT_NAME}
+	REQUEST_OUTPUT_NAME=cinner_request_${COMMIT}_${REPO_NAME}.txt
+	REQUEST_OUTPUT=${SCRIPT_OUTPUT_DIR}/${REQUEST_OUTPUT_NAME}
+	SCRIPT_OUTPUT_HTML_NAME=codecept_report_${COMMIT}_${REPO_NAME}.html
+	SCRIPT_OUTPUT_HTML=${SCRIPT_OUTPUT_DIR}/${SCRIPT_OUTPUT_HTML_NAME}
+	PARENT_OUTPUT_NAME=script_output_${COMMIT}_${REPO_NAME}.txt
+	PARENT_OUTPUT=${SCRIPT_OUTPUT_DIR}/${PARENT_OUTPUT_NAME}
+
+	LOG_URL_SCRIPT="${LOG_URL_BASE}/${SCRIPT_OUTPUT_NAME}"
+	LOG_URL_REQUEST="${LOG_URL_BASE}/${REQUEST_OUTPUT_NAME}"
+	LOG_URL_CODECEPT="${LOG_URL_BASE}/${SCRIPT_OUTPUT_HTML_NAME}"
+	LOG_URL_PARENT="${LOG_URL_BASE}/${PARENT_OUTPUT_NAME}"
+}
 
 # IMPORTANT: set config vars before parsing cmd line args
 . ./config_vars.sh || die "unable to set config variables"
 
+# NOTE: Overriding built-in functions
+[ -f ./functions_override.sh ] && . ./functions_override.sh
 
 # cmd line args
 while getopts ":c:vdrsfh" opt; do
@@ -232,19 +270,7 @@ if [ -z "${COMMIT}" ]; then
 fi
 
 # set some post commit vars
-SCRIPT_OUTPUT_NAME=cinner_run_${COMMIT}_${REPO_NAME}.txt
-SCRIPT_OUTPUT=${SCRIPT_OUTPUT_DIR}/${SCRIPT_OUTPUT_NAME}
-REQUEST_OUTPUT_NAME=cinner_request_${COMMIT}_${REPO_NAME}.txt
-REQUEST_OUTPUT=${SCRIPT_OUTPUT_DIR}/${REQUEST_OUTPUT_NAME}
-SCRIPT_OUTPUT_HTML_NAME=codecept_report_${COMMIT}_${REPO_NAME}.html
-SCRIPT_OUTPUT_HTML=${SCRIPT_OUTPUT_DIR}/${SCRIPT_OUTPUT_HTML_NAME}
-PARENT_OUTPUT_NAME=script_output_${COMMIT}_${REPO_NAME}.txt
-PARENT_OUTPUT=${SCRIPT_OUTPUT_DIR}/${PARENT_OUTPUT_NAME}
-
-LOG_URL_SCRIPT="${LOG_URL_BASE}/${SCRIPT_OUTPUT_NAME}"
-LOG_URL_REQUEST="${LOG_URL_BASE}/${REQUEST_OUTPUT_NAME}"
-LOG_URL_CODECEPT="${LOG_URL_BASE}/${SCRIPT_OUTPUT_HTML_NAME}"
-LOG_URL_PARENT="${LOG_URL_BASE}/${PARENT_OUTPUT_NAME}"
+set_postcommit_vars
 
 # check if task has already been executed
 set_execution_status
@@ -292,21 +318,8 @@ check_verbose && echo "fetching and checking out via git..."
 check_verbose && echo "running test script..."
 run_tests
 
-# one line status
-CMD_OUTPUT_SHORT=$(get_test_output)
-
-# if test script failed, rerun test with debug enabled
-if [ "${STATUS}" = ${STAT_FAIL} ] && check_var "${RERUN_ON_FAILURE}"; then
-	check_verbose && echo "re-running tests with debug mode on..."
-	CODECEPT_ARG="--debug"
-	run_tests
-	send_message "${STATUS}" "${CMD_OUTPUT_SHORT}" "${LOG_URL_SCRIPT}" "ci/apiTests/failure-debug"
-fi
-
 # set final status
-send_message "${STATUS}" "${CMD_OUTPUT_SHORT}" "${LOG_URL_CODECEPT}"
 write_status "${STATUS}"
-
 check_verbose && echo "test complete, status: $STATUS"
 
 # CLEAR THE STATUS FILE for next build
