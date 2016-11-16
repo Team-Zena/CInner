@@ -138,6 +138,25 @@ check_execution_status () {
 	return 1
 }
 
+# to get the output of a test (one liner)
+get_test_output () {
+	local out
+	if [ -f "${SCRIPT_OUTPUT}" ]; then
+		out="$(tail -n -2 "${SCRIPT_OUTPUT}" | head -n 1)"
+	fi
+	echo -n "${out}"
+}
+
+# to check output of a test and set STATUS
+check_and_set_test_output() {
+	CMD_OUTPUT=$(tail -n -4 "${SCRIPT_OUTPUT}" | tr -d '\n')
+	if echo "${CMD_OUTPUT}" | grep -q 'FAILURES!'; then
+		STATUS="${STAT_FAIL}"
+	else
+		STATUS="${STAT_PASS}"
+	fi
+}
+
 # to set execution status of COMMIT in build log as well as send message
 set_execution_status () {
 	[ -z "${COMMIT}" ] && return 1
@@ -167,12 +186,7 @@ codecept_run_test () {
 	"${REPO_LOC}/vendor/bin/codecept" run --html="${SCRIPT_OUTPUT_HTML}" --no-colors --ansi --config "${CODECEPT_CONF}" "${CODECEPT_ARG}" > "${SCRIPT_OUTPUT}" 2>&1
 
 	# parse output from script
-	CMD_OUTPUT=$(tail -n -4 "${SCRIPT_OUTPUT}" | tr -d '\n')
-	if echo "${CMD_OUTPUT}" | grep -q 'FAILURES!'; then
-		STATUS="${STAT_FAIL}"
-	else
-		STATUS="${STAT_PASS}"
-	fi
+	check_and_set_test_output
 }
 
 # to run the test script and set output variables
@@ -193,15 +207,6 @@ run_tests () {
 
 	# send message to github with status
 	send_message "${STATUS}" "${CMD_OUTPUT_SHORT}" "${LOG_URL_CODECEPT}"
-}
-
-# to get the output of a test (one liner)
-get_test_output () {
-	local out
-	if [ -f "${SCRIPT_OUTPUT}" ]; then
-		out="$(tail -n -2 "${SCRIPT_OUTPUT}" | head -n 1)"
-	fi
-	echo -n "${out}"
 }
 
 # to set relevant variables once the COMMIT variable has been redefined
