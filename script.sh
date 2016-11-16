@@ -165,7 +165,7 @@ set_execution_status () {
 	if check_execution_status; then
 		retval="$(grep -w "${COMMIT}" "${BUILD_LOG}" | while read -r line; do \
 				stat=$(echo -n "$line" | grep -o -e "${STAT_FAIL}" -e "${STAT_PASS}"); \
-				if [ "$stat" = $STAT_FAIL ] || [ "$stat" = $STAT_PASS ]; then
+				if [ "$stat" = "$STAT_FAIL" ] || [ "$stat" = "$STAT_PASS" ]; then
 					local test_out
 					test_out=$(get_test_output)
 					check_var "${RESEND_MSG}" && send_message "${stat}" "${test_out}" "${LOG_URL_CODECEPT}"
