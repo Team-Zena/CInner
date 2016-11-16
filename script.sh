@@ -46,7 +46,8 @@ send_message () {
 
 	# send the message
 	/usr/bin/curl --silent -i -H "Authorization: token ${GITHUB_TOKEN}" \
-		-d '{  "state": "'"${status}"'",  "target_url": "'"${url}"'",  "description": "'"${message}"'","context": "'"$context"'"}' "${GITHUB_API_REMOTE}/statuses/${COMMIT}" >> "${REQUEST_OUTPUT}" 2>&1
+		-d '{  "state": "'"${status}"'",  "target_url": "'"${url}"'",  "description": "'"${message}"'","context": "'"$context"'"}' \
+		"${GITHUB_API_REMOTE}/statuses/${COMMIT}" >> "${REQUEST_OUTPUT}" 2>&1
 }
 
 # to check if lock is acquired by current process
@@ -183,7 +184,8 @@ set_execution_status () {
 
 # to run a codeception test
 codecept_run_test () {
-	"${REPO_LOC}/vendor/bin/codecept" run --html="${SCRIPT_OUTPUT_HTML}" --no-colors --ansi --config "${CODECEPT_CONF}" "${CODECEPT_ARG}" > "${SCRIPT_OUTPUT}" 2>&1
+	"${REPO_LOC}/vendor/bin/codecept" run --html="${SCRIPT_OUTPUT_HTML}" --no-colors --ansi --config "${CODECEPT_CONF}" "${CODECEPT_ARG}" \
+		> "${SCRIPT_OUTPUT}" 2>&1
 
 	# parse output from script
 	check_and_set_test_output
