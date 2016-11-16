@@ -221,6 +221,18 @@ set_postcommit_vars() {
 	LOG_URL_PARENT="${LOG_URL_BASE}/${PARENT_OUTPUT_NAME}"
 }
 
+# to write and send initial status
+set_initial_status() {
+	send_message "${STAT_WAIT}" "About to run the tasks" "${LOG_URL_SCRIPT}"
+	write_status "${STAT_WAIT}"
+}
+
+# To fetch remote commit and checkout using git
+git_fetch_and_checkout() {
+	/usr/bin/git --git-dir="${REPO_GIT}" --work-tree="${REPO_LOC}" fetch origin ${QUIET} || clear_and_exit "${STAT_TERM}"
+	/usr/bin/git --git-dir="${REPO_GIT}" --work-tree="${REPO_LOC}" reset --hard "${COMMIT}" ${QUIET} || clear_and_exit "${STAT_TERM}"
+}
+
 # IMPORTANT: set config vars before parsing cmd line args
 . ./config_vars.sh || die "unable to set config variables"
 
@@ -303,13 +315,11 @@ if [ "$START_TIME" -gt $END_TIME ]; then
 fi
 
 # set status as pending
-send_message "${STAT_WAIT}" "About to run the tasks" "${LOG_URL_SCRIPT}"
-write_status "${STAT_WAIT}"
+set_initial_status
 
 # checkout specified commit
 check_verbose && echo "fetching and checking out via git..."
-/usr/bin/git --git-dir="${REPO_GIT}" --work-tree="${REPO_LOC}" fetch origin ${QUIET} || clear_and_exit "${STAT_TERM}"
-/usr/bin/git --git-dir="${REPO_GIT}" --work-tree="${REPO_LOC}" reset --hard "${COMMIT}" ${QUIET} || clear_and_exit "${STAT_TERM}"
+git_fetch_and_checkout
 
 # pre-run tasks
 
