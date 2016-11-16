@@ -55,7 +55,7 @@
 			"state"       => "pending",
 			"target_url"  => CINNER_REMOTE_URL . "/pending.php?hash=$strCommitHash&time=$startTime",
 			"description" => "Build submitted",
-			"context"     => "ci/apiTests"
+			"context"     => "ci/Tests"
 		]),
 		CURLOPT_HTTPHEADER     => array(
 			"Authorization: token " . GITHUB_TOKEN,
