@@ -46,7 +46,8 @@ send_message () {
 
 	# send the message
 	/usr/bin/curl --silent -i -H "Authorization: token ${GITHUB_TOKEN}" \
-		-d '{  "state": "'"${status}"'",  "target_url": "'"${url}"'",  "description": "'"${message}"'","context": "'"$context"'"}' "${GITHUB_API_REMOTE}/statuses/${COMMIT}" >> "${REQUEST_OUTPUT}" 2>&1
+		-d '{  "state": "'"${status}"'",  "target_url": "'"${url}"'",  "description": "'"${message}"'","context": "'"$context"'"}' \
+		"${GITHUB_API_REMOTE}/statuses/${COMMIT}" >> "${REQUEST_OUTPUT}" 2>&1
 }
 
 # to check if lock is acquired by current process
@@ -138,6 +139,25 @@ check_execution_status () {
 	return 1
 }
 
+# to get the output of a test (one liner)
+get_test_output () {
+	local out
+	if [ -f "${SCRIPT_OUTPUT}" ]; then
+		out="$(tail -n -2 "${SCRIPT_OUTPUT}" | head -n 1)"
+	fi
+	echo -n "${out}"
+}
+
+# to check output of a test and set STATUS
+check_and_set_test_output() {
+	CMD_OUTPUT=$(tail -n -4 "${SCRIPT_OUTPUT}" | tr -d '\n')
+	if echo "${CMD_OUTPUT}" | grep -q -e 'FAILURES!' -e 'ERRORS!'; then
+		STATUS="${STAT_FAIL}"
+	else
+		STATUS="${STAT_PASS}"
+	fi
+}
+
 # to set execution status of COMMIT in build log as well as send message
 set_execution_status () {
 	[ -z "${COMMIT}" ] && return 1
@@ -146,7 +166,7 @@ set_execution_status () {
 	if check_execution_status; then
 		retval="$(grep -w "${COMMIT}" "${BUILD_LOG}" | while read -r line; do \
 				stat=$(echo -n "$line" | grep -o -e "${STAT_FAIL}" -e "${STAT_PASS}"); \
-				if [ "$stat" = $STAT_FAIL ] || [ "$stat" = $STAT_PASS ]; then
+				if [ "$stat" = "$STAT_FAIL" ] || [ "$stat" = "$STAT_PASS" ]; then
 					local test_out
 					test_out=$(get_test_output)
 					check_var "${RESEND_MSG}" && send_message "${stat}" "${test_out}" "${LOG_URL_CODECEPT}"
@@ -164,15 +184,11 @@ set_execution_status () {
 
 # to run a codeception test
 codecept_run_test () {
-	"${REPO_LOC}/vendor/bin/codecept" run --html="${SCRIPT_OUTPUT_HTML}" --no-colors --ansi --config "${CODECEPT_CONF}" "${CODECEPT_ARG}" > "${SCRIPT_OUTPUT}" 2>&1
+	"${REPO_LOC}/vendor/bin/codecept" run --html="${SCRIPT_OUTPUT_HTML}" --no-colors --ansi --config "${CODECEPT_CONF}" "${CODECEPT_ARG}" \
+		> "${SCRIPT_OUTPUT}" 2>&1
 
 	# parse output from script
-	CMD_OUTPUT=$(tail -n -4 "${SCRIPT_OUTPUT}" | tr -d '\n')
-	if echo "${CMD_OUTPUT}" | grep -q -e 'FAILURES!' -e 'ERRORS!'; then
-		STATUS="${STAT_FAIL}"
-	else
-		STATUS="${STAT_PASS}"
-	fi
+	check_and_set_test_output
 }
 
 # to run the test script and set output variables
@@ -195,15 +211,6 @@ run_tests () {
 	send_message "${STATUS}" "${CMD_OUTPUT_SHORT}" "${LOG_URL_CODECEPT}"
 }
 
-# to get the output of a test (one liner)
-get_test_output () {
-	local out
-	if [ -f "${SCRIPT_OUTPUT}" ]; then
-		out="$(tail -n -2 "${SCRIPT_OUTPUT}" | head -n 1)"
-	fi
-	echo -n "${out}"
-}
-
 # to set relevant variables once the COMMIT variable has been redefined
 set_postcommit_vars() {
 	SCRIPT_OUTPUT_NAME=cinner_run_${COMMIT}_${REPO_NAME}.txt
@@ -219,6 +226,18 @@ set_postcommit_vars() {
 	LOG_URL_REQUEST="${LOG_URL_BASE}/${REQUEST_OUTPUT_NAME}"
 	LOG_URL_CODECEPT="${LOG_URL_BASE}/${SCRIPT_OUTPUT_HTML_NAME}"
 	LOG_URL_PARENT="${LOG_URL_BASE}/${PARENT_OUTPUT_NAME}"
+}
+
+# to write and send initial status
+set_initial_status() {
+	send_message "${STAT_WAIT}" "About to run the tasks" "${LOG_URL_SCRIPT}"
+	write_status "${STAT_WAIT}"
+}
+
+# To fetch remote commit and checkout using git
+git_fetch_and_checkout() {
+	/usr/bin/git --git-dir="${REPO_GIT}" --work-tree="${REPO_LOC}" fetch origin ${QUIET} || clear_and_exit "${STAT_TERM}"
+	/usr/bin/git --git-dir="${REPO_GIT}" --work-tree="${REPO_LOC}" reset --hard "${COMMIT}" ${QUIET} || clear_and_exit "${STAT_TERM}"
 }
 
 # IMPORTANT: set config vars before parsing cmd line args
@@ -303,13 +322,11 @@ if [ "$START_TIME" -gt $END_TIME ]; then
 fi
 
 # set status as pending
-send_message "${STAT_WAIT}" "About to run the tasks" "${LOG_URL_SCRIPT}"
-write_status "${STAT_WAIT}"
+set_initial_status
 
 # checkout specified commit
 check_verbose && echo "fetching and checking out via git..."
-/usr/bin/git --git-dir="${REPO_GIT}" --work-tree="${REPO_LOC}" fetch origin ${QUIET} || clear_and_exit "${STAT_TERM}"
-/usr/bin/git --git-dir="${REPO_GIT}" --work-tree="${REPO_LOC}" reset --hard "${COMMIT}" ${QUIET} || clear_and_exit "${STAT_TERM}"
+git_fetch_and_checkout
 
 # pre-run tasks
 
