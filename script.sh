@@ -168,7 +168,7 @@ codecept_run_test () {
 
 	# parse output from script
 	CMD_OUTPUT=$(tail -n -4 "${SCRIPT_OUTPUT}" | tr -d '\n')
-	if echo "${CMD_OUTPUT}" | grep -q 'FAILURES!'; then
+	if echo "${CMD_OUTPUT}" | grep -q -e 'FAILURES!' -e 'ERRORS!'; then
 		STATUS="${STAT_FAIL}"
 	else
 		STATUS="${STAT_PASS}"
