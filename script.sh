@@ -150,7 +150,7 @@ get_test_output () {
 
 # to check output of a test and set STATUS
 check_and_set_test_output() {
-	CMD_OUTPUT=$(tail -n -4 "${SCRIPT_OUTPUT}" | tr -d '\n')
+	CMD_OUTPUT=$(tail -n -4 "${SCRIPT_OUTPUT}")
 	if echo "${CMD_OUTPUT}" | grep -q -e 'FAILURES!' -e 'ERRORS!'; then
 		STATUS="${STAT_FAIL}"
 	else
