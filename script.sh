@@ -183,7 +183,7 @@ set_execution_status () {
 
 # to run a codeception test
 codecept_run_test () {
-	"${REPO_LOC}/vendor/bin/codecept" run --html="${SCRIPT_OUTPUT_HTML}" --no-colors --ansi --config "${CODECEPT_CONF}" "${CODECEPT_ARG}" \
+	nice -n 10 "${REPO_LOC}/vendor/bin/codecept" run --html="${SCRIPT_OUTPUT_HTML}" --no-colors --ansi --config "${CODECEPT_CONF}" "${CODECEPT_ARG}" \
 		> "${SCRIPT_OUTPUT}" 2>&1
 
 	# parse output from script
