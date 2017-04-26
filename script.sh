@@ -183,7 +183,7 @@ set_execution_status () {
 
 # to run a codeception test
 codecept_run_test () {
-	nice -n 10 "${REPO_LOC}/vendor/bin/codecept" run --html="${SCRIPT_OUTPUT_HTML}" --no-colors --ansi --config "${CODECEPT_CONF}" "${CODECEPT_ARG}" \
+	nice -10 "${REPO_LOC}/vendor/bin/codecept" run --html="${SCRIPT_OUTPUT_HTML}" --no-colors --ansi --config "${CODECEPT_CONF}" "${CODECEPT_ARG}" \
 		> "${SCRIPT_OUTPUT}" 2>&1
 
 	# parse output from script
@@ -201,30 +201,62 @@ run_tests () {
 	# if test script failed, rerun test with debug enabled
 	if [ "${STATUS}" = ${STAT_FAIL} ] && check_var "${RERUN_ON_FAILURE}"; then
 		check_verbose && echo "re-running tests with debug mode on..."
-		CODECEPT_ARG="--debug"
+		set_codecept_mode 'debug'
 		codecept_run_test
 		send_message "${STATUS}" "${CMD_OUTPUT_SHORT}" "${LOG_URL_SCRIPT}" "ci/Tests/failure-debug"
+		set_codecept_mode 'normal'
 	fi
 
 	# send message to github with status
 	send_message "${STATUS}" "${CMD_OUTPUT_SHORT}" "${LOG_URL_CODECEPT}"
 }
 
-# to set relevant variables once the COMMIT variable has been redefined
-set_postcommit_vars() {
+# to set the static (hardcoded) post commit vars
+set_static_postcommit_vars() {
 	SCRIPT_OUTPUT_NAME=cinner_run_${COMMIT}_${REPO_NAME}.txt
-	SCRIPT_OUTPUT=${SCRIPT_OUTPUT_DIR}/${SCRIPT_OUTPUT_NAME}
 	REQUEST_OUTPUT_NAME=cinner_request_${COMMIT}_${REPO_NAME}.txt
-	REQUEST_OUTPUT=${SCRIPT_OUTPUT_DIR}/${REQUEST_OUTPUT_NAME}
 	SCRIPT_OUTPUT_HTML_NAME=codecept_report_${COMMIT}_${REPO_NAME}.html
-	SCRIPT_OUTPUT_HTML=${SCRIPT_OUTPUT_DIR}/${SCRIPT_OUTPUT_HTML_NAME}
 	PARENT_OUTPUT_NAME=script_output_${COMMIT}_${REPO_NAME}.txt
-	PARENT_OUTPUT=${SCRIPT_OUTPUT_DIR}/${PARENT_OUTPUT_NAME}
+}
+
+# to set the dynamic (derived) post commit vars
+set_dynamic_postcommit_vars() {
+	SCRIPT_OUTPUT="${SCRIPT_OUTPUT_DIR}/${SCRIPT_OUTPUT_NAME}"
+	REQUEST_OUTPUT="${SCRIPT_OUTPUT_DIR}/${REQUEST_OUTPUT_NAME}"
+	SCRIPT_OUTPUT_HTML="${SCRIPT_OUTPUT_DIR}/${SCRIPT_OUTPUT_HTML_NAME}"
+	PARENT_OUTPUT="${SCRIPT_OUTPUT_DIR}/${PARENT_OUTPUT_NAME}"
 
 	LOG_URL_SCRIPT="${LOG_URL_BASE}/${SCRIPT_OUTPUT_NAME}"
 	LOG_URL_REQUEST="${LOG_URL_BASE}/${REQUEST_OUTPUT_NAME}"
 	LOG_URL_CODECEPT="${LOG_URL_BASE}/${SCRIPT_OUTPUT_HTML_NAME}"
 	LOG_URL_PARENT="${LOG_URL_BASE}/${PARENT_OUTPUT_NAME}"
+}
+
+# to set relevant variables once the COMMIT variable has been redefined
+set_postcommit_vars() {
+	set_static_postcommit_vars
+	set_dynamic_postcommit_vars
+}
+
+# to set debugging vars for codeception
+set_codecept_debug_vars() {
+	SCRIPT_OUTPUT_NAME=cinner_run_debug_${COMMIT}_${REPO_NAME}.txt
+	REQUEST_OUTPUT_NAME=cinner_request_debug_${COMMIT}_${REPO_NAME}.txt
+	SCRIPT_OUTPUT_HTML_NAME=codecept_report_debug_${COMMIT}_${REPO_NAME}.html
+	PARENT_OUTPUT_NAME=script_output_debug_${COMMIT}_${REPO_NAME}.txt
+}
+
+# to set codeception mode to normal or debug
+set_codecept_mode() {
+	local mode=normal
+	if [ "$1" == 'debug' ]; then
+		CODECEPT_ARG="--debug"
+		set_codecept_debug_vars
+	else
+		CODECEPT_ARG=
+		set_static_postcommit_vars
+	fi
+	set_dynamic_postcommit_vars
 }
 
 # to write and send initial status

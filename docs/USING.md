@@ -8,4 +8,4 @@ The log folder can be password protected.
 
 Hook for push can be added to github project webhook.
 
-Permission for this folder and files (as well as for the folder and files that are used by git and the test framework) can be such that the user that executes the script can access it.
+Permission for this folder and files (as well as for the folder and files that are used by git and the test framework) should be such that the user that executes the script can access it.
