@@ -9,3 +9,6 @@ The log folder can be password protected.
 Hook for push can be added to github project webhook.
 
 Permission for this folder and files (as well as for the folder and files that are used by git and the test framework) should be such that the user that executes the script can access it.
+
+For setting up the git repo (for which testing is being done) a github OAuth Token can be used in the remote:
+https://github.com/blog/1270-easier-builds-and-deployments-using-git-over-https-and-oauth
